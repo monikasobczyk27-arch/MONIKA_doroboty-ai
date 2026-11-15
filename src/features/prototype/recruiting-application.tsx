@@ -4,6 +4,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ApplicationRecord } from "./application-record";
 import { nextStages, stageLabels, type Application } from "./model";
 import { usePrototype } from "./store";
+import { RequirementSummary, RecruiterBrief, reviewRows } from "./requirement-summary";
+import { recruiterRecommendation } from "./recruiter-assessment";
+import { submittedCvText } from "./submitted-cv";
 
 export function RecruitingApplication({ application }: { application: Application }) {
   const { state, run } = usePrototype();
@@ -13,6 +16,15 @@ export function RecruitingApplication({ application }: { application: Applicatio
   const pendingFocus = useRef(false);
   const company = state.companies.find((item) => item.id === application.companyId);
   const availableStages = nextStages[application.stage];
+  const description = state.jobs.find((item) => item.id === application.jobId)?.description ?? "";
+  const cv = submittedCvText(application.candidateId, application.cv);
+  const review = { description, answer: application.answer, cv };
+  const rows = reviewRows(review);
+  const recommendation = recruiterRecommendation(rows);
+  const suggestedNote = `${recommendation.title}. ${recommendation.why}\nDo omówienia:\n${rows
+    .filter((row) => row.status !== "Tak")
+    .map((row) => `• ${row.question}`)
+    .join("\n")}\nSamodzielny wkład kandydata i sposób pomiaru rezultatu.`;
 
   useLayoutEffect(() => {
     if (pendingFocus.current) {
@@ -25,6 +37,7 @@ export function RecruitingApplication({ application }: { application: Applicatio
     <>
       <ApplicationRecord
         application={application}
+        summaryContent={<RecruiterBrief {...review} />}
         companyName={company?.name ?? ""}
         audience="employer"
         history={application.events}
@@ -58,6 +71,11 @@ export function RecruitingApplication({ application }: { application: Applicatio
           )
         }
       >
+        <RequirementSummary
+          cv={cv}
+          description={state.jobs.find((item) => item.id === application.jobId)?.description ?? ""}
+          answer={application.answer}
+        />
         {availableStages.length > 0 ? (
           <>
             <h3>
@@ -66,6 +84,17 @@ export function RecruitingApplication({ application }: { application: Applicatio
             <p className="record-caption" id="recruiting-note-hint">
               Widoczna tylko pracodawcy w tym scenariuszu.
             </p>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={Boolean(note.trim())}
+              onClick={() => {
+                setNote(suggestedNote);
+                document.getElementById("recruiting-note")?.focus();
+              }}
+            >
+              Wstaw proponowaną notatkę
+            </Button>
             <Textarea
               id="recruiting-note"
               aria-label="Notatka rekrutacyjna (widoczna pracodawcy)"

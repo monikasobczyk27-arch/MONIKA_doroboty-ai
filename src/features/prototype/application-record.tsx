@@ -21,6 +21,7 @@ export function ApplicationRecord({
   statusRef,
   children,
   footer,
+  summaryContent,
 }: {
   application: Pick<
     Application,
@@ -32,6 +33,7 @@ export function ApplicationRecord({
   statusRef?: Ref<HTMLSpanElement>;
   children?: ReactNode;
   footer?: ReactNode;
+  summaryContent?: ReactNode;
 }) {
   const candidate = audience === "candidate";
   const title = candidate ? application.jobTitle : application.candidateName;
@@ -112,7 +114,7 @@ export function ApplicationRecord({
           </section>
           <section className="record-summary" aria-labelledby="summary-heading">
             <h2 id="summary-heading">Podsumowanie</h2>
-            <p>{application.summary}</p>
+            {summaryContent ?? <p>{application.summary}</p>}
           </section>
         </aside>
       </div>

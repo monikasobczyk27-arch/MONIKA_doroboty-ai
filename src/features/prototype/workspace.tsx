@@ -16,6 +16,8 @@ import { CvAttachment } from "./cv-attachment";
 import { MatchScore } from "./match-score";
 import { RecruitingApplication } from "./recruiting-application";
 import { CandidateApplication } from "./candidate-application";
+import { EvidenceHelper, ContactRecommendation } from "./requirement-summary";
+import { submittedCvText } from "./submitted-cv";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -326,6 +328,15 @@ export function ApplyPage() {
             className="application-form-section application-answer"
             aria-label="Odpowiedź do aplikacji"
           >
+            <EvidenceHelper
+              description={job.description}
+              answer={answer}
+              disabled={submitted}
+              onChange={(value) => {
+                setAnswer(value);
+                setConsent(false);
+              }}
+            />
             <Field label="Dlaczego pasujesz do tej roli?">
               <Textarea
                 disabled={submitted}
@@ -452,7 +463,16 @@ export function ApplicationsPage({ employer = false }: { employer?: boolean }) {
                   </p>
                   <p>{stageLabels[a.stage]}</p>
                 </div>
-                <MatchScore score={a.score} />
+                <div className="flex flex-col items-start gap-2 sm:items-end">
+                  <MatchScore score={a.score} />
+                  {employer && (
+                    <ContactRecommendation
+                      description={state.jobs.find((job) => job.id === a.jobId)?.description ?? ""}
+                      answer={a.answer}
+                      cv={submittedCvText(a.candidateId, a.cv)}
+                    />
+                  )}
+                </div>
               </div>
               {employer && <p className="mt-4 text-muted-foreground">{a.summary}</p>}
             </article>
