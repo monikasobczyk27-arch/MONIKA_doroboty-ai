@@ -124,13 +124,10 @@ export function PrivacyPage() {
           ani poufnych informacji.
         </p>
         <p>
-          Profile, aplikacje i ustawienia pozostają w pamięci tej przeglądarki. Aplikacja nie wysyła
-          ich do bazy, dostawcy AI ani systemu analitycznego. Plik eksportu zawiera cały lokalny
-          scenariusz, w tym notatki.
+          Profile, aplikacje i ustawienia pozostają w pamięci tej przeglądarki. Aplikacja nie wysyła tych danych do PostHog. Plik eksportu zawiera cały lokalny scenariusz, w tym notatki.
         </p>
         <p>
-          Możesz usunąć zmiany przyciskiem „Resetuj scenariusz” w ustawieniach lub wyczyścić dane
-          witryny w przeglądarce. Hosting może prowadzić własne logi dostępu.
+          Możesz usunąć zmiany przyciskiem „Resetuj scenariusz” w ustawieniach lub wyczyścić dane witryny w przeglądarce. Gdy analityka jest włączona, PostHog otrzymuje zdarzenia otwarcia prototypu, wyświetlenia oferty oraz rozpoczęcia i wysłania zgłoszenia. Zdarzenia zawierają losowy identyfikator w pamięci przeglądarki i, w przypadku zdarzeń dotyczących oferty, jej identyfikator. Po zgodzie możemy również rejestrować kliknięcia i nagrywać wizytę na publicznej stronie głównej i stronach ofert. Formularze, tekst i widoki po wyborze osoby są wyłączone z nagrań lub zasłonięte. Zgodę możesz wycofać w stopce. Hosting może prowadzić własne logi dostępu.
         </p>
       </div>
     </section>

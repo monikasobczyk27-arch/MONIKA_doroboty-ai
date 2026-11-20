@@ -111,3 +111,9 @@ The AI Product Manager offer uses six review items drawn from its full text: lif
 EMP-EXP-02 requirement count: employer cards display a supporting-pink requirement badge between Match Score and the contact recommendation. It counts Tak against all review items, matching the detail counter. The detail counter uses the same pink background. Partials remain separate in the detail matrix; no score threshold or recommendation policy changed.
 
 EMP-EXP-01 B2B context correction: the canonical product review recognizes product/system/offer work with manufacturers, dealers, distributors or business partners, and professional medical equipment financing context, even without the literal B2B keyword. Operational sales/offer/decision/financing workflows are matched separately. Supporting evidence may span up to four adjacent fragments within the same CV or answer; unrelated sources are not joined to infer one business relationship. Short excerpts support each check. Mere sector names or patient/consumer equipment financing do not establish B2B experience. Rules remain scripted and limited, with no API or semantic-model claim. Updated calculations feed both list and detail without modifying saved applications.
+
+The static Vercel demo seeds Marek Nowak and Anna Kowalska for the BrightLabs AI Product Manager role in fresh browser sessions. See [Vercel demo scenario](docs/tasks/vercel-demo-scenario.md).
+
+Optional PostHog browser analytics records prototype opens, offer views, application starts and successful submissions when configured. See [PostHog browser analytics](docs/tasks/posthog-browser-analytics.md).
+
+With consent, PostHog records public browsing and clicks on public controls. See [public interaction analytics](docs/tasks/posthog-public-interactions.md).

@@ -1,0 +1,105 @@
+import posthog from "posthog-js";
+
+type JobEvent = "job_viewed" | "application_started" | "application_submitted";
+
+export function captureJobEvent(event: JobEvent, jobId: string) {
+  posthog.capture(event, { job_id: jobId });
+}
+
+export const interactionAnalyticsConfigured = Boolean(
+  import.meta.env.VITE_POSTHOG_PROJECT_TOKEN?.trim() && import.meta.env.VITE_POSTHOG_HOST?.trim(),
+);
+
+export function isPublicAnalyticsPath(pathname: string) {
+  return pathname === "/" || /^\/oferty(?:\/[^/]+)?\/?$/.test(pathname);
+}
+
+function publicInteractionCaptureAllowed() {
+  const hashPath = window.location.hash.slice(1).split(/[?#]/, 1)[0] || "/";
+  return (
+    isPublicAnalyticsPath(hashPath) &&
+    document.querySelector("[data-public-interaction-capture]") !== null
+  );
+}
+
+export function setPublicInteractionCapture(enabled: boolean) {
+  if (!interactionAnalyticsConfigured) return;
+  if (enabled) posthog.startSessionRecording();
+  else posthog.stopSessionRecording();
+}
+
+export function startBrowserAnalytics() {
+  const token = import.meta.env.VITE_POSTHOG_PROJECT_TOKEN?.trim();
+  const host = import.meta.env.VITE_POSTHOG_HOST?.trim();
+  if (!token || !host) return;
+
+  posthog.init(token, {
+    api_host: host,
+    defaults: "2026-08-30",
+    autocapture: {
+      dom_event_allowlist: ["click"],
+      element_allowlist: ["a", "button"],
+      css_selector_allowlist: ["[data-public-interaction-capture]"],
+      css_selector_ignorelist: [
+        ".ph-no-autocapture",
+        "[data-ph-no-autocapture]",
+        "[data-private-analytics]",
+        "form",
+        "input",
+        "select",
+        "textarea",
+        "[contenteditable]",
+      ],
+    },
+    mask_all_text: true,
+    mask_all_element_attributes: true,
+    capture_pageview: false,
+    capture_pageleave: false,
+    capture_dead_clicks: false,
+    capture_exceptions: false,
+    capture_performance: false,
+    disable_session_recording: true,
+    disable_surveys: true,
+    enable_recording_console_log: false,
+    session_recording: {
+      blockSelector:
+        "[data-private-analytics], form, input, textarea, select, [contenteditable], iframe",
+      maskAllInputs: true,
+      maskTextSelector: "*",
+      maskAttributeFn: (name, value) =>
+        ["class", "role", "width", "height"].includes(name) ? value : "",
+      maskCapturedNetworkRequestFn: () => null,
+      recordHeaders: false,
+      recordBody: false,
+    },
+    advanced_disable_feature_flags: true,
+    disable_conversations: true,
+    disable_product_tours: true,
+    person_profiles: "never",
+    persistence: "memory",
+    before_send: (event) => {
+      if (!event) return null;
+      const { token, distinct_id, $process_person_profile, job_id } = event.properties;
+      const properties = { token, distinct_id, $process_person_profile };
+      switch (event.event) {
+        case "$autocapture":
+          return publicInteractionCaptureAllowed()
+            ? { ...event, properties: { ...properties, $event_type: "click" } }
+            : null;
+        case "$snapshot":
+          return publicInteractionCaptureAllowed() ? event : null;
+        case "prototype_opened":
+          return { ...event, properties };
+        case "job_viewed":
+        case "application_started":
+        case "application_submitted":
+          return { ...event, properties: { ...properties, job_id } };
+        default:
+          return null;
+      }
+    },
+    loaded: (client) => {
+      client.capture("prototype_opened");
+    },
+  });
+}

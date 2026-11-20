@@ -1,3 +1,4 @@
+import { captureJobEvent } from "@/app/analytics";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from "react-router";
 import { CheckCircle2, FileText } from "lucide-react";
@@ -258,10 +259,15 @@ export function ApplyPage() {
   const answerLength = answer.trim().length;
   const answerInvalid = attempted && answerLength < MIN_APPLICATION_ANSWER_LENGTH;
   const consentInvalid = attempted && !consent;
+  const jobId = job?.id;
+  const existing = state.applications.find((x) => x.jobId === jobId && x.candidateId === person.id);
+  const startedJob = useRef<string>(undefined);
+  useEffect(() => {
+    if (!jobId || existing || startedJob.current === jobId) return;
+    startedJob.current = jobId;
+    captureJobEvent("application_started", jobId);
+  }, [existing, jobId]);
   if (!job) return <NotFound />;
-  const existing = state.applications.find(
-    (x) => x.jobId === job.id && x.candidateId === person.id,
-  );
   if (existing && !submitted)
     return (
       <section className="prototype-section">
@@ -285,6 +291,7 @@ export function ApplyPage() {
     }
     if (run({ type: "submit", jobId: job!.id, notes, generated, answer, consent })) {
       submittedOnce.current = true;
+      captureJobEvent("application_submitted", job!.id);
       setSubmitted(true);
       if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         const rect = sendButton.current?.getBoundingClientRect();

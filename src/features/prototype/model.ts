@@ -244,6 +244,27 @@ export function initialState(): State {
     stage: "submitted",
     events: [{ stage: "submitted", at: "2026-11-02T09:00:00.000Z", note: "" }],
   });
+  if (import.meta.env.MODE === "vercel-demo") {
+    const anna = state.people.find((person) => person.id === "candidate-anna")!;
+    state.applications.push({
+      id: "application-example-anna",
+      candidateId: anna.id,
+      jobId: job.id,
+      companyId: job.companyId,
+      jobTitle: job.title,
+      candidateName: anna.name,
+      cv: anna.cv,
+      answer:
+        "Prowadziłam rozwój narzędzi dla zespołów operacyjnych. Po rozmowach z użytkownikami ustaliłam priorytety wdrożenia asystenta, który skrócił czas obsługi o 30%.",
+      sourceNotes: "",
+      generatedAnswer: "",
+      score: anna.exampleScore,
+      summary: anna.exampleSummary,
+      stage: "submitted",
+      events: [{ stage: "submitted", at: "2026-11-02T10:00:00.000Z", note: "" }],
+    });
+  }
+
   return stateSchema.parse(state);
 }
 export function publishedJobs(state: State): JobWithCompany[] {

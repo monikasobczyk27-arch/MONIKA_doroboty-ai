@@ -1,4 +1,9 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  interactionAnalyticsConfigured,
+  isPublicAnalyticsPath,
+  setPublicInteractionCapture,
+} from "@/app/analytics";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import {
   Menu,
@@ -70,6 +75,14 @@ export function Shell() {
   const { state, issue, error, clearError } = usePrototype();
   const person = currentPerson(state);
   const { pathname } = useLocation();
+  const publicView = !person && isPublicAnalyticsPath(pathname);
+  const [interactionConsent, setInteractionConsent] = useState<boolean | null>(null);
+  const captureInteractions =
+    interactionAnalyticsConfigured && publicView && interactionConsent === true;
+  useLayoutEffect(() => {
+    setPublicInteractionCapture(captureInteractions);
+    return () => setPublicInteractionCapture(false);
+  }, [captureInteractions]);
   const workspace = pathname.startsWith("/app") && person;
   const [menuAt, setMenuAt] = useState<string | null>(null);
   const main = useRef<HTMLElement>(null);
@@ -111,7 +124,26 @@ export function Shell() {
     </>
   );
   return (
-    <div className="min-h-dvh bg-background text-foreground">
+    <div
+      className="min-h-dvh bg-background text-foreground"
+      data-private-analytics={publicView ? undefined : ""}
+      data-public-interaction-capture={captureInteractions ? "" : undefined}
+    >
+      {interactionAnalyticsConfigured && publicView && interactionConsent === null && (
+        <section
+          data-private-analytics
+          aria-label="Opcjonalne nagrywanie wizyty"
+          className="flex flex-wrap items-center justify-center gap-2 border-b px-4 py-2 text-sm"
+        >
+          <p>Czy możemy zapisać kliknięcia i nagrać sposób korzystania z publicznych stron?</p>
+          <Button size="sm" onClick={() => setInteractionConsent(true)}>
+            Zezwól
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setInteractionConsent(false)}>
+            Pomiń
+          </Button>
+        </section>
+      )}
       <a
         href="#main"
         className="skip-link"
@@ -298,6 +330,15 @@ export function Shell() {
                 <Link to="/oferty">Oferty</Link>
                 <Link to="/metodologia">Metodologia</Link>
                 <Link to="/polityka-prywatnosci">Prywatność</Link>
+                {interactionAnalyticsConfigured && publicView && interactionConsent !== null && (
+                  <button
+                    type="button"
+                    data-private-analytics
+                    onClick={() => setInteractionConsent(interactionConsent ? false : null)}
+                  >
+                    {interactionConsent ? "Wyłącz nagrywanie" : "Ustawienia nagrywania"}
+                  </button>
+                )}
                 <Link className="inline-flex items-center gap-1" to="/auth/sign-in">
                   Strefa case <ArrowUpRight className="size-4" />
                 </Link>
