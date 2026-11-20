@@ -120,6 +120,27 @@ export function Shell() {
       )}
       <div key={`${state.activePersonId}:${pathname}`}>
         <Outlet />
+        {interactionAnalyticsConfigured && pathname === "/polityka-prywatnosci" && (
+          <section
+            data-private-analytics
+            aria-labelledby="recording-settings"
+            className="prototype-section max-w-4xl"
+          >
+            <h2 id="recording-settings">Ustawienia nagrywania</h2>
+            <p className="my-4">
+              {interactionConsent === true
+                ? "Zgoda na kliknięcia i nagrywanie jest włączona."
+                : "Zgoda na kliknięcia i nagrywanie jest wyłączona."}
+              {" Nagrywanie działa na stronie głównej i stronach ofert przed wyborem osoby."}
+            </p>
+            <Button
+              onClick={() => setInteractionConsent(interactionConsent !== true)}
+              aria-pressed={interactionConsent === true}
+            >
+              {interactionConsent === true ? "Wycofaj zgodę" : "Zezwól na nagrywanie"}
+            </Button>
+          </section>
+        )}
       </div>
     </>
   );
