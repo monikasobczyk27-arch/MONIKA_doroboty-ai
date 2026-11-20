@@ -1,5 +1,19 @@
 import posthog from "posthog-js";
 
+const publicReplayLabels = new Set([
+  "DoRoboty.ai",
+  "Oferty",
+  "Zobacz oferty",
+  "Wszystkie oferty",
+  "Wróć do ofert",
+  "Jak wybieramy role",
+  "Metodologia",
+  "Aplikuj",
+  "Filtry",
+  "Wybierz osobę",
+  "Prywatność",
+]);
+
 type JobEvent = "job_viewed" | "application_started" | "application_submitted";
 
 export function captureJobEvent(event: JobEvent, jobId: string) {
@@ -66,6 +80,10 @@ export function startBrowserAnalytics() {
         "[data-private-analytics], form, input, textarea, select, [contenteditable], iframe",
       maskAllInputs: true,
       maskTextSelector: "*",
+      maskTextFn: (text, element) => {
+        if (element?.closest("a, button") && publicReplayLabels.has(text.trim())) return text;
+        return text.replace(/\S/g, "*");
+      },
       maskAttributeFn: (name, value, element) => {
         if (["class", "role", "width", "height"].includes(name)) return value;
         if (element?.tagName === "LINK" && element.getAttribute("rel") === "stylesheet") {
