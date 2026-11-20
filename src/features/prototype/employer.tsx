@@ -16,6 +16,7 @@ import { currentPerson, jobSchema } from "./model";
 import { usePrototype } from "./store";
 import { Field } from "./workspace";
 import { Empty, NotFound, PageTitle } from "./shell";
+import posthog, { posthogLogger } from "@/lib/posthog";
 
 export function EmployerJobs() {
   const { state } = usePrototype();
@@ -133,7 +134,26 @@ export function EmployerJobEditor() {
       );
       return;
     }
-    if (run({ type: "publish", job: parsed.data })) navigate("/app/oferty");
+    if (run({ type: "publish", job: parsed.data })) {
+      posthog.capture("job_published", {
+        publication_action: existing ? "updated" : "created",
+        category: parsed.data.category,
+        function: parsed.data.function,
+        remote_status: parsed.data.remoteStatus,
+        seniority: parsed.data.seniority,
+        contract: parsed.data.contract,
+      });
+      posthogLogger.info("job published", {
+        action: "job_published",
+        publication_action: existing ? "updated" : "created",
+        category: parsed.data.category,
+        function: parsed.data.function,
+        remote_status: parsed.data.remoteStatus,
+        seniority: parsed.data.seniority,
+        contract: parsed.data.contract,
+      });
+      navigate("/app/oferty");
+    }
   }
   return (
     <>
@@ -286,8 +306,10 @@ export function CompanyEditor() {
         name: String(data.get("name")),
         description: String(data.get("description")),
       })
-    )
+    ) {
+      posthog.capture("company_profile_saved");
       setMessage("Dane firmy zostały zapisane.");
+    }
   }
   return (
     <>

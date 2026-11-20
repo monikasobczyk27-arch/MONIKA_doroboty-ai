@@ -16,6 +16,7 @@ import { CvAttachment } from "./cv-attachment";
 import { MatchScore } from "./match-score";
 import { RecruitingApplication } from "./recruiting-application";
 import { CandidateApplication } from "./candidate-application";
+import posthog, { posthogLogger } from "@/lib/posthog";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -156,8 +157,10 @@ export function ProfilePage({ preview = false }: { preview?: boolean }) {
           location: String(data.get("location")),
         },
       })
-    )
+    ) {
+      posthog.capture("profile_saved");
       setMessage("Profil został zapisany.");
+    }
   }
   return (
     <>
@@ -282,6 +285,21 @@ export function ApplyPage() {
       return;
     }
     if (run({ type: "submit", jobId: job!.id, notes, generated, answer, consent })) {
+      posthog.capture("application_submitted", {
+        answer_length: answerLength,
+        category: job!.category,
+        function: job!.function,
+        remote_status: job!.remoteStatus,
+        seniority: job!.seniority,
+      });
+      posthogLogger.info("application submitted", {
+        action: "application_submitted",
+        answer_length: answerLength,
+        category: job!.category,
+        function: job!.function,
+        remote_status: job!.remoteStatus,
+        seniority: job!.seniority,
+      });
       submittedOnce.current = true;
       setSubmitted(true);
       if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -387,8 +405,24 @@ export function ApplyPage() {
                 disabled={submitted}
                 variant="outline"
                 onClick={() => {
-                  if (run({ type: "draft", jobId: job.id, notes, generated, answer }))
+                  if (run({ type: "draft", jobId: job.id, notes, generated, answer })) {
+                    posthog.capture("application_draft_saved", {
+                      answer_length: answerLength,
+                      category: job.category,
+                      function: job.function,
+                      remote_status: job.remoteStatus,
+                      seniority: job.seniority,
+                    });
+                    posthogLogger.info("application draft saved", {
+                      action: "application_draft_saved",
+                      answer_length: answerLength,
+                      category: job.category,
+                      function: job.function,
+                      remote_status: job.remoteStatus,
+                      seniority: job.seniority,
+                    });
                     setMessage("Szkic został zapisany.");
+                  }
                 }}
               >
                 Zapisz szkic
