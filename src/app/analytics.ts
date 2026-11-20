@@ -66,9 +66,27 @@ export function startBrowserAnalytics() {
         "[data-private-analytics], form, input, textarea, select, [contenteditable], iframe",
       maskAllInputs: true,
       maskTextSelector: "*",
-      maskAttributeFn: (name, value) =>
-        ["class", "role", "width", "height"].includes(name) ? value : "",
-      maskCapturedNetworkRequestFn: () => null,
+      maskAttributeFn: (name, value, element) => {
+        if (["class", "role", "width", "height"].includes(name)) return value;
+        if (element?.tagName === "LINK" && element.getAttribute("rel") === "stylesheet") {
+          if (name === "rel") return "stylesheet";
+          if (name === "href") {
+            const asset = new URL(value, window.location.origin);
+            if (
+              asset.origin === window.location.origin &&
+              /^\/assets\/[\w.-]+\.css$/.test(asset.pathname)
+            )
+              return asset.origin + asset.pathname;
+          }
+        }
+        return "";
+      },
+      maskCapturedNetworkRequestFn: (request) => {
+        // Replay metadata needs an href to render. Keep only a generic public route.
+        if (Object.keys(request).length !== 1 || !publicInteractionCaptureAllowed()) return null;
+        const path = window.location.hash.startsWith("#/oferty") ? "#/oferty" : "#/";
+        return { ...request, name: window.location.origin + "/" + path };
+      },
       recordHeaders: false,
       recordBody: false,
     },

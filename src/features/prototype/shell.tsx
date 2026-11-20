@@ -76,7 +76,27 @@ export function Shell() {
   const person = currentPerson(state);
   const { pathname } = useLocation();
   const publicView = !person && isPublicAnalyticsPath(pathname);
-  const [interactionConsent, setInteractionConsent] = useState<boolean | null>(null);
+  const [interactionConsent, setInteractionConsent] = useState<boolean | null>(() => {
+    try {
+      const saved = window.sessionStorage.getItem("doroboty.recording-consent");
+      return saved === "allowed" ? true : saved === "declined" ? false : null;
+    } catch {
+      return null;
+    }
+  });
+  useLayoutEffect(() => {
+    try {
+      if (interactionConsent === null)
+        window.sessionStorage.removeItem("doroboty.recording-consent");
+      else
+        window.sessionStorage.setItem(
+          "doroboty.recording-consent",
+          interactionConsent ? "allowed" : "declined",
+        );
+    } catch {
+      // Consent remains in memory when browser storage is unavailable.
+    }
+  }, [interactionConsent]);
   const captureInteractions =
     interactionAnalyticsConfigured && publicView && interactionConsent === true;
   useLayoutEffect(() => {
